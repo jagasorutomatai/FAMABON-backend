@@ -1,2 +1,5 @@
 # vscodeのワークスペース設定
 .vscode
+
+# バイトコード
+__pycache__/

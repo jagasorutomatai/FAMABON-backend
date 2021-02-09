@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'djoser',
+    # 'corsheaders',
     'apiv1.apps.Apiv1Config',
     'account.apps.AccountConfig',
     'household.apps.HouseholdConfig',
@@ -48,11 +49,14 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # add a middleware class to listen in on responses:
+    # 'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -144,3 +148,6 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('jwt'),
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30)}
+
+# すべてのオリジンが許可する
+# CORS_ORIGIN_ALLOW_ALL = True
