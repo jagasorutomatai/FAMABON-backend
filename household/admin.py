@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Book
+from .models.book import Book
+from .models.tag import Tag
 
 
 class BookModelAdmin(admin.ModelAdmin):
@@ -10,4 +11,11 @@ class BookModelAdmin(admin.ModelAdmin):
     readonly_fields = ('id', 'created_at', 'updated_at')
 
 
+class TagModelAdmin(admin.ModelAdmin):
+    list_display = ('name', 'created_at', 'updated_at')
+    ordering = ('-updated_at',)
+    readonly_fields = ('id', 'created_at', 'updated_at')
+
+
 admin.site.register(Book, BookModelAdmin)
+admin.site.register(Tag, TagModelAdmin)
