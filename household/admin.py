@@ -12,7 +12,7 @@ class BookModelAdmin(admin.ModelAdmin):
 
 
 class TagModelAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created_at', 'updated_at')
+    list_display = ('name', 'color', 'created_at', 'updated_at')
     ordering = ('-updated_at',)
     readonly_fields = ('id', 'created_at', 'updated_at')
 
