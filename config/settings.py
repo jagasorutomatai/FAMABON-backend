@@ -150,6 +150,8 @@ REST_FRAMEWORK = {
 
 # django-rest-framework-simplejwtの設定
 SIMPLE_JWT = {
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'account_id',
     'AUTH_HEADER_TYPES': ('jwt'),
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30)}
 

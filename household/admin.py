@@ -5,7 +5,7 @@ from .models.tag import Tag
 
 
 class BookModelAdmin(admin.ModelAdmin):
-    list_display = ('title', 'money', 'date', 'account',
+    list_display = ('title', 'description', 'money', 'date', 'account',
                     'created_at', 'updated_at')
     ordering = ('-created_at',)
     readonly_fields = ('id', 'created_at', 'updated_at')
