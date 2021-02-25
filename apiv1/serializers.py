@@ -5,28 +5,42 @@ from rest_framework import serializers
 
 
 class TagSerializer(serializers.ModelSerializer):
+    account = serializers.ReadOnlyField(source='account.uuid')
+    account_uuid = serializers.PrimaryKeyRelatedField(
+        queryset=Account.objects.all(), write_only=True)
+
     class Meta:
         model = Tag
-        fields = ['id', 'name', 'color']
+        fields = ['uuid', 'name', 'color', 'account', 'account_uuid']
+
+    def create(self, validated_data):
+        validated_data['account'] = validated_data.get('account_uuid', None)
+
+        if validated_data['account'] is None:
+            raise serializers.ValidationError("アカウントが選択されてません")
+
+        del validated_data['account_uuid']
+
+        return Tag.objects.create(**validated_data)
 
 
 class BookSerializer(serializers.ModelSerializer):
-    account = serializers.ReadOnlyField(source='account.id')
-    account_id = serializers.PrimaryKeyRelatedField(
+    account = serializers.ReadOnlyField(source='account.uuid')
+    account_uuid = serializers.PrimaryKeyRelatedField(
         queryset=Account.objects.all(), write_only=True)
     tag = TagSerializer(read_only=True)
-    tag_uid = serializers.PrimaryKeyRelatedField(
+    tag_uuid = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), write_only=True)
 
     class Meta:
         model = Book
-        fields = ['id', 'title', 'description', 'money', 'date', 'tag',
-                  'tag_uid', 'account', 'account_id', 'created_at',
+        fields = ['uuid', 'title', 'description', 'money', 'date', 'tag',
+                  'tag_uuid', 'account', 'account_uuid', 'created_at',
                   'updated_at']
 
     def create(self, validated_data):
-        validated_data['account'] = validated_data.get('account_id', None)
-        validated_data['tag'] = validated_data.get('tag_uid', None)
+        validated_data['account'] = validated_data.get('account_uuid', None)
+        validated_data['tag'] = validated_data.get('tag_uuid', None)
 
         if validated_data['account'] is None:
             raise serializers.ValidationError("アカウントが選択されてません")
@@ -34,13 +48,13 @@ class BookSerializer(serializers.ModelSerializer):
         if validated_data['tag'] is None:
             raise serializers.ValidationError("タグが選択されてません")
 
-        del validated_data['account_id']
-        del validated_data["tag_uid"]
+        del validated_data['account_uuid']
+        del validated_data["tag_uuid"]
 
         return Book.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        validated_data['tag'] = validated_data.get('tag_uid', None)
+        validated_data['tag'] = validated_data.get('tag_uuid', None)
 
         instance.title = validated_data.get('title', instance.title)
         instance.money = validated_data.get('money', instance.money)
