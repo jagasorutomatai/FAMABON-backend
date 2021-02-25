@@ -10,7 +10,8 @@ class Book(models.Model):
     帳簿モデル
     """
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    uuid = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(verbose_name='タイトル', max_length=50)
     description = models.TextField(
         verbose_name='説明', null=True, blank=True, max_length=250)

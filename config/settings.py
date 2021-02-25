@@ -150,10 +150,19 @@ REST_FRAMEWORK = {
 
 # django-rest-framework-simplejwtの設定
 SIMPLE_JWT = {
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'account_id',
+    'USER_ID_FIELD': 'uuid',
+    'USER_ID_CLAIM': 'account_uuid',
     'AUTH_HEADER_TYPES': ('jwt'),
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30)}
+
+# djoserの設定
+# https://djoser.readthedocs.io/en/latest/index.html
+DJOSER = {
+    'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
+    'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',
+    'USER_CREATE_PASSWORD_RETYPE': True,
+    'SET_PASSWORD_RETYPE': True
+}
 
 # すべてのオリジンが許可する
 CORS_ORIGIN_ALLOW_ALL = True

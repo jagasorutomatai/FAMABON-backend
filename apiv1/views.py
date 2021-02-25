@@ -1,3 +1,4 @@
+from account.models import Account
 from django.db.models import Sum
 from household.models.book import Book
 from household.models.tag import Tag
@@ -11,9 +12,6 @@ from .serializers import (BookSerializer, PeriodSerializer, TagSerializer,
                           TestSerializer, TotalByDateSerializer,
                           TotalByTagSerializer)
 
-# from rest_framework_simplejwt.authentication import \
-#     JWTAuthentication as simplejwt
-
 
 class BookViewSet(viewsets.ModelViewSet):
     """
@@ -24,12 +22,41 @@ class BookViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filterset_class = BookFilter
 
+    def list(self, request):
+        account_uuid = request.user.uuid
+        book_list = Book.objects.all().filter(account__uuid__iexact=account_uuid)
+        filtered_book_list = self.filter_queryset(book_list)
+        serializer = self.get_serializer(filtered_book_list, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        account_uuid = request.user.uuid
+        book_uuid = self.kwargs.get('pk')
+        book = Book.objects.all().filter(account__uuid=account_uuid, uuid=book_uuid)
+        if book.first() is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer = self.get_serializer(book.first())
+            return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        account_uuid = request.user.uuid
+        book_uuid = self.kwargs.get('pk')
+        book = Book.objects.all().filter(account__uuid=account_uuid, uuid=book_uuid)
+        if book.first() is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            instance = self.get_object()
+            serializer = self.get_serializer(
+                instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return Response(serializer.data)
+
     @action(detail=False)
     def total(self, request):
         """帳簿の合計を返却する"""
-        print("===========================================")
-        print(request.user)
-        print(request.auth)
         date_after = request.GET.get("date_after")
         date_before = request.GET.get("date_before")
 
@@ -104,3 +131,25 @@ class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        account_uuid = request.user.uuid
+        tag_list = Tag.objects.all().filter(account__uuid__iexact=account_uuid)
+        filtered_tag_list = self.filter_queryset(tag_list)
+        serializer = self.get_serializer(filtered_tag_list, many=True)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        account_uuid = request.user.uuid
+        tag_uuid = self.kwargs.get('pk')
+        tag = Tag.objects.all().filter(account__uuid=account_uuid, uuid=tag_uuid)
+        if tag.first() is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            instance = self.get_object()
+            serializer = self.get_serializer(
+                instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return Response(serializer.data)
