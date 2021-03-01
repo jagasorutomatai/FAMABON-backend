@@ -57,14 +57,16 @@ class BookViewSet(viewsets.ModelViewSet):
     @action(detail=False)
     def total(self, request):
         """帳簿の合計を返却する"""
+        account_uuid = request.user.uuid
         date_after = request.GET.get("date_after")
         date_before = request.GET.get("date_before")
 
         if date_after is not None or date_before is not None:
-            total = Book.objects.all().filter(date__range=(
+            total = Book.objects.all().filter(account__uuid=account_uuid, date__range=(
                 date_after, date_before)).aggregate(total=Sum("money"))
         else:
-            total = Book.objects.all().aggregate(total=Sum("money"))
+            total = Book.objects.all().filter(
+                account__uuid=account_uuid).aggregate(total=Sum("money"))
         serializer = TestSerializer(data=total)
         serializer.is_valid()
         return Response(serializer.data)
@@ -72,11 +74,11 @@ class BookViewSet(viewsets.ModelViewSet):
     @ action(detail=False)
     def totalByDate(self, request):
         """帳簿の日別の合計一覧を返す"""
-
+        account_uuid = request.user.uuid
         date_after = request.GET.get("date_after")
         date_before = request.GET.get("date_before")
-        total_by_date = Book.objects.values("date").annotate(
-            total=Sum("money")).order_by("-date").reverse()
+        total_by_date = Book.objects.values("date").filter(
+            account__uuid=account_uuid).annotate(total=Sum("money")).order_by("-date").reverse()
 
         # URLクエリパラメータが存在する場合の処理
         if date_after is not None or date_before is not None:
@@ -93,10 +95,11 @@ class BookViewSet(viewsets.ModelViewSet):
     @ action(detail=False)
     def totalByTag(self, request):
         """タグ別の合計一覧を返す"""
+        account_uuid = request.user.uuid
         date_after = request.GET.get("date_after")
         date_before = request.GET.get("date_before")
         books = Book.objects.select_related('tag').values(
-            "money", "date", "tag__name", "tag__color")
+            "money", "date", "tag__name", "tag__color").filter(account__uuid=account_uuid)
 
         # URLクエリパラメータが存在する場合の処理
         if date_after is not None or date_before is not None:
@@ -113,8 +116,10 @@ class BookViewSet(viewsets.ModelViewSet):
 
     @action(detail=False)
     def period(self, request):
-        period = Book.objects.values(
-            "date").distinct().order_by("-date").reverse()
+        """帳簿が記録されている期間を返す"""
+        account_uuid = request.user.uuid
+        period = Book.objects.values("date").filter(
+            account__uuid=account_uuid).distinct().order_by("-date").reverse()
         serializer = PeriodSerializer(data=list(period), many=True)
 
         if serializer.is_valid():
