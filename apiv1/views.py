@@ -102,7 +102,7 @@ class BookViewSet(viewsets.ModelViewSet):
         if date_after is not None or date_before is not None:
             books = books.filter(date__range=(date_after, date_before))
         total_by_tag = books.values(
-            "tag__name", "tag__color").annotate(total=Sum("money"))
+            "tag__name", "tag__color").annotate(total=Sum("money")).order_by("-total")
         serializer = TotalByTagSerializer(data=list(total_by_tag), many=True)
 
         if serializer.is_valid():
