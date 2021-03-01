@@ -6,9 +6,6 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 class TestBookViews(APITestCase):
 
-    # ===============================
-    # 正常系テスト　　　　　　　　　|
-    # ===============================
     def setUp(self):
         # テスト用のデータ作成
         self.login_user = factories.AccountFactory(
@@ -195,7 +192,7 @@ class TestBookViews(APITestCase):
         self.assertEqual(response.status_code,
                          status.HTTP_200_OK, "HTTPレスポンスステータスコードが200のとき")
         self.assertEqual(response.data["total"],
-                         5000, "帳簿の金額の合計が「3000」のとき")
+                         5000, "帳簿の金額の合計が「5000」のとき")
 
     def test_get_book_totalByDate(self):
         tag_tag1 = factories.TagFactory(name="tag1", account=self.login_user)
@@ -286,9 +283,9 @@ class TestBookViews(APITestCase):
         self.assertEqual(response.data[0],
                          {"tag__name": "tag3", "tag__color": "grey", "total": 9000}, "タグ「tag3」の合計が9000のとき")
         self.assertEqual(response.data[1],
-                         {"tag__name": "tag2", "tag__color": "grey", "total": 7000}, "タグ「tag3」の合計が9000のとき")
+                         {"tag__name": "tag2", "tag__color": "grey", "total": 7000}, "タグ「tag3」の合計が7000のとき")
         self.assertEqual(response.data[2],
-                         {"tag__name": "tag1", "tag__color": "grey", "total": 5000}, "タグ「tag3」の合計が9000のとき")
+                         {"tag__name": "tag1", "tag__color": "grey", "total": 5000}, "タグ「tag3」の合計が5000のとき")
 
     def test_get_filter_book_totalByTag(self):
         tag_tag1 = factories.TagFactory(name="tag1", account=self.login_user)
@@ -317,15 +314,11 @@ class TestBookViews(APITestCase):
         self.assertEqual(response.status_code,
                          status.HTTP_200_OK, "HTTPレスポンスステータスコードが200のとき")
         self.assertEqual(response.data[0],
-                         {"tag__name": "tag2", "tag__color": "grey", "total": 7000}, "タグ「tag3」の合計が9000のとき")
+                         {"tag__name": "tag2", "tag__color": "grey", "total": 7000}, "タグ「tag3」の合計が7000のとき")
         self.assertEqual(response.data[1],
-                         {"tag__name": "tag1", "tag__color": "grey", "total": 4000}, "タグ「tag3」の合計が9000のとき")
+                         {"tag__name": "tag1", "tag__color": "grey", "total": 4000}, "タグ「tag3」の合計が4000のとき")
         self.assertEqual(response.data[2],
-                         {"tag__name": "tag3", "tag__color": "grey", "total": 3000}, "タグ「tag3」の合計が9000のとき")
-
-    # ===============================
-    # 異常系テスト　　　　　　　　　|
-    # ===============================
+                         {"tag__name": "tag3", "tag__color": "grey", "total": 3000}, "タグ「tag3」の合計が3000のとき")
 
     def test_get_book_list_anotheruser(self):
         # テスト用データの作成
@@ -437,3 +430,83 @@ class TestBookViews(APITestCase):
                          status.HTTP_400_BAD_REQUEST, "HTTPレスポンスステータスコードが400のとき")
         self.assertEqual(response.data["money"][0],
                          "有効な整数を入力してください。", "帳簿の金額が文字列のとき")
+
+    def test_get_book_total_anotheruser(self):
+        # テスト用データの作成
+        tag_tag1 = factories.TagFactory(name="tag1", account=self.login_user)
+        tag_tag2 = factories.TagFactory(name="tag2", account=self.another_user)
+        factories.BookFactory(money=1000, date="2020-02-15",
+                              account=self.login_user, tag=tag_tag1)
+        factories.BookFactory(money=1000, date="2020-03-15",
+                              account=self.login_user, tag=tag_tag1)
+        factories.BookFactory(money=1000, date="2020-04-15",
+                              account=self.another_user, tag=tag_tag2)
+
+        # APIの実行
+        url = "/api/v1/household/books/total/"
+        response = self.client.get(url)
+
+        # レスポンスの評価
+        self.assertEqual(response.status_code,
+                         status.HTTP_200_OK, "HTTPレスポンスステータスコードが200のとき")
+        self.assertEqual(response.data["total"],
+                         2000, "帳簿の金額の合計が「2000」のとき")
+
+    def test_get_book_totalByDate_anotheruser(self):
+        # テスト用データの作成
+        tag_tag1 = factories.TagFactory(name="tag1", account=self.login_user)
+        tag_tag2 = factories.TagFactory(name="tag2", account=self.another_user)
+        factories.BookFactory(money=1000, date="2020-02-15",
+                              account=self.login_user, tag=tag_tag1)
+        factories.BookFactory(money=1000, date="2020-03-15",
+                              account=self.login_user, tag=tag_tag1)
+        factories.BookFactory(money=1000, date="2020-04-15",
+                              account=self.login_user, tag=tag_tag1)
+        factories.BookFactory(money=1000, date="2020-02-15",
+                              account=self.another_user, tag=tag_tag2)
+        factories.BookFactory(money=1000, date="2020-03-15",
+                              account=self.another_user, tag=tag_tag2)
+        factories.BookFactory(money=1000, date="2020-04-15",
+                              account=self.another_user, tag=tag_tag2)
+
+        # APIの実行
+        url = "/api/v1/household/books/totalByDate/"
+        response = self.client.get(url)
+
+        # レスポンスの評価
+        self.assertEqual(response.status_code,
+                         status.HTTP_200_OK, "HTTPレスポンスステータスコードが200のとき")
+        self.assertEqual(response.data[0],
+                         {"date": "2020-02-15", "total": 1000}, "帳簿の「2020-02-15」の合計が1000のとき")
+        self.assertEqual(response.data[1],
+                         {"date": "2020-03-15", "total": 1000}, "帳簿の「2020-03-15」の合計が1000のとき")
+        self.assertEqual(response.data[2],
+                         {"date": "2020-04-15", "total": 1000}, "帳簿の「2020-04-15」の合計が1000のとき")
+
+    def test_get_book_totalByTag_anotheruser(self):
+        # テスト用データの作成
+        tag_tag1 = factories.TagFactory(name="tag1", account=self.login_user)
+        tag_tag2 = factories.TagFactory(name="tag2", account=self.another_user)
+
+        factories.BookFactory(money=1000, date="2020-02-15",
+                              account=self.login_user, tag=tag_tag1)
+        factories.BookFactory(money=1000, date="2020-02-15",
+                              account=self.login_user, tag=tag_tag1)
+        factories.BookFactory(money=1000, date="2020-02-15",
+                              account=self.login_user, tag=tag_tag1)
+        factories.BookFactory(money=1000, date="2020-02-15",
+                              account=self.another_user, tag=tag_tag2)
+        factories.BookFactory(money=1000, date="2020-02-15",
+                              account=self.another_user, tag=tag_tag2)
+
+        # APIの実行
+        url = "/api/v1/household/books/totalByTag/"
+        response = self.client.get(url)
+
+        # レスポンスの評価
+        self.assertEqual(response.status_code,
+                         status.HTTP_200_OK, "HTTPレスポンスステータスコードが200のとき")
+        self.assertEqual(len(response.data),
+                         1, "取得した帳簿のタグ別合計データ数が1件のとき")
+        self.assertEqual(response.data[0],
+                         {"tag__name": "tag1", "tag__color": "grey", "total": 3000}, "タグ「tag1」の合計が3000のとき")
